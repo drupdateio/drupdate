@@ -1,3 +1,13 @@
 {
-  "name": "drupdateio/drupdate"
+  "name": "drupdateio/drupdate",
+  "description": "Open source project behind https://drupdate.io",
+  "homepage": "https://drupdate.io",
+  "autoload": {
+    "psr-4": {
+      "Drupdate\\":  "src/"
+    }
+  },
+  "require": {
+    "php": "^7.0"
+  }
 }
