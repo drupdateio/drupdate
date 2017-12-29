@@ -34,8 +34,8 @@ abstract class Repository {
   protected function getModules() {
     if (empty($this->projects)) {
       // Step 2: get list of modules with their version
-      $dir_iterator = new RecursiveDirectoryIterator($this->clone_directory);
-      $iterator = new RecursiveIteratorIterator($dir_iterator, RecursiveIteratorIterator::SELF_FIRST);
+      $dir_iterator = new \RecursiveDirectoryIterator($this->clone_directory);
+      $iterator = new \RecursiveIteratorIterator($dir_iterator, \RecursiveIteratorIterator::SELF_FIRST);
       foreach ($iterator as $file) {
         if ($file->getExtension() == 'info') {
           $data = file_get_contents($file->getRealPath());
