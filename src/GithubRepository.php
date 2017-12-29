@@ -23,7 +23,7 @@ final class GithubRepository extends Repository {
   }
 
   protected function pullRequest($modules) {
-    $pr_data = new stdClass();
+    $pr_data = new \stdClass();
     $pr_data->title = 'Drupal module updates ' . $this->getDateString();
     $pr_data->head = 'drupdate-' . $this->getDateString();
     $pr_data->base = $this->branch;
@@ -56,8 +56,5 @@ final class GithubRepository extends Repository {
 
     // close cURL resource, and free up system resources
     curl_close($ch);
-
-    $obj = json_decode($response);
-    return $obj->token;
   }
 }
