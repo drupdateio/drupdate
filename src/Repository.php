@@ -25,8 +25,13 @@ abstract class Repository {
   // Temporary directory for drupal core updates
   protected $core_directory = '';
 
+  // Base branch to clone
+  protected $branch = '';
+
+  protected $date_string = '';
+
   public function clone() {
-    $cmd = 'git clone '. $this->url . ' ' . $this->clone_directory;
+    $cmd = 'git clone -b '. $this->branch . ' ' . $this->url . ' ' . $this->clone_directory;
     exec($cmd, $output, $return);
     return [$output, $return];
   }
@@ -124,18 +129,20 @@ abstract class Repository {
           $modules .= ' drupal-' . $this->recommended_versions['drupal'];
         }
         $this->commit($modules);
+        $this->pullRequest($modules);
       }
     }
     else {
       // We are just updating drupal core
       $modules = 'drupal-' . $this->recommended_versions['drupal'];
       $this->commit($modules);
+      $this->pullRequest($modules);
     }
   }
 
   protected function commit($modules) {
     // Step 5: commit the changes in an update branch
-    $date = date('Y-m-d');
+    $date = $this->getDateString();
     $cmd = 'cd '. $this->clone_directory . '; git checkout -b drupdate-' . $date . '; git add --all .; git commit -am "Updated ' . $modules.'"';
     exec($cmd, $output, $return);
     if ($return == 0) {
@@ -145,6 +152,8 @@ abstract class Repository {
     }
   }
 
+  abstract protected function pullRequest($modules);
+
   protected function cleanUp() {
     if (is_dir($this->clone_directory)) {
       $this->rrmdir($this->clone_directory);
@@ -152,6 +161,14 @@ abstract class Repository {
     if (!empty($this->core_directory) && is_dir($this->core_directory)) {
       $this->rrmdir($this->core_directory);
     }
+  }
+
+  protected function getDateString() {
+    if (empty($this->date_string)) {
+      date_default_timezone_set('UTC');
+      $this->date_string = date('c');
+    }
+    return $this->date_string;
   }
 
   /**
