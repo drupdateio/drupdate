@@ -63,7 +63,7 @@ abstract class Repository {
           $available = update_parse_xml($xml);
           update_calculate_project_update_status(NULL, $project, $available);
           $recommended = $project['recommended'];
-          if ($this->options['security']) {
+          if (isset($this->options['security']) && !empty($this->options['security'])) {
             if (count($project['security updates'])) {
               $shifted = array_shift($project['security updates']);
               $recommended = $shifted['version'];
@@ -105,7 +105,7 @@ abstract class Repository {
           $cmd = 'drush dl drupal-' . $this->recommended_versions['drupal'] . ' -y --destination=' . $this->core_directory . ' --drupal-project-rename';
           exec($cmd, $output, $return);
           if ($return == 0) {
-            $cmd = 'cp -R ' . CORE_DIR . '/drupal/* ' . $drupal_directory;
+            $cmd = 'cp -R ' . $this->core_directory . '/drupal/* ' . $drupal_directory;
             exec($cmd, $output, $return);
             $core_update = TRUE;
           }
