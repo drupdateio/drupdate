@@ -166,7 +166,7 @@ abstract class Repository {
   protected function getDateString() {
     if (empty($this->date_string)) {
       date_default_timezone_set('UTC');
-      $this->date_string = date('c');
+      $this->date_string = date('Y-m-d-His');
     }
     return $this->date_string;
   }
