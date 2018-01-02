@@ -156,7 +156,7 @@ abstract class Repository {
 
   abstract protected function pullRequest($modules);
 
-  protected function cleanUp() {
+  public function cleanUp() {
     if (is_dir($this->clone_directory)) {
       $this->rrmdir($this->clone_directory);
     }
