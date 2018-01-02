@@ -118,27 +118,27 @@ abstract class Repository {
           }
         }
       }
-    }
-    if (!empty($to_update)) {
-      foreach ($to_update as &$name) {
-        $name = $name . '-' . $this->recommended_versions[$name];
-      }
-      $modules = implode(' ', $to_update);
-      $cmd = 'cd ' . $drupal_directory . '; drush -y dl ' . $modules;
-      exec($cmd, $output, $return);
-      if ($return == 0) {
-        if ($core_update) {
-          $modules .= ' drupal-' . $this->recommended_versions['drupal'];
+      if (!empty($to_update)) {
+        foreach ($to_update as &$name) {
+          $name = $name . '-' . $this->recommended_versions[$name];
         }
+        $modules = implode(' ', $to_update);
+        $cmd = 'cd ' . $drupal_directory . '; drush -y dl ' . $modules;
+        exec($cmd, $output, $return);
+        if ($return == 0) {
+          if ($core_update) {
+            $modules .= ' drupal-' . $this->recommended_versions['drupal'];
+          }
+          $this->commit($modules);
+          $this->pullRequest($modules);
+        }
+      }
+      else {
+        // We are just updating drupal core
+        $modules = 'drupal-' . $this->recommended_versions['drupal'];
         $this->commit($modules);
         $this->pullRequest($modules);
       }
-    }
-    else {
-      // We are just updating drupal core
-      $modules = 'drupal-' . $this->recommended_versions['drupal'];
-      $this->commit($modules);
-      $this->pullRequest($modules);
     }
   }
 
