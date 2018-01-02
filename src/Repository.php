@@ -57,6 +57,7 @@ abstract class Repository {
   protected function getUpdates() {
     if (empty($this->updates)) {
       $to_update = array();
+      $recommended_versions = array();
       // Step 3: get list of modules that need to be updated
       update_process_project_info($this->projects);
 
