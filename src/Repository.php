@@ -83,7 +83,7 @@ abstract class Repository {
         if ($xml) {
           $available = update_parse_xml($xml);
           update_calculate_project_update_status(NULL, $project, $available);
-          $recommended = $project['recommended'];
+          $recommended = isset($project['recommended']) ? $project['recommended'] : '';
           if (isset($this->options['security_only']) && !empty($this->options['security_only'])) {
             if (count($project['security updates'])) {
               $shifted = array_shift($project['security updates']);
