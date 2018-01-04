@@ -1,5 +1,7 @@
 <?php
 
+use Symfony\Component\Yaml\Yaml;
+
 namespace Drupdate;
 
 abstract class Repository {
@@ -36,6 +38,18 @@ abstract class Repository {
     return [$output, $return];
   }
 
+  /**
+   * Read options from yaml file if it exists
+   */
+  protected function readOptions() {
+    if (empty($this->options) && is_file($this->clone_directory . '/.drupdate.yml')) {
+      $options = Yaml::parseFile($this->clone_directory . '/.drupdate.yml');
+      if (!empty($values)) {
+        $this->options = $options;
+      }
+    }
+  }
+
   protected function getModules() {
     if (empty($this->projects)) {
       // Step 2: get list of modules with their version
@@ -70,7 +84,7 @@ abstract class Repository {
           $available = update_parse_xml($xml);
           update_calculate_project_update_status(NULL, $project, $available);
           $recommended = $project['recommended'];
-          if (isset($this->options['security']) && !empty($this->options['security'])) {
+          if (isset($this->options['security_only']) && !empty($this->options['security_only'])) {
             if (count($project['security updates'])) {
               $shifted = array_shift($project['security updates']);
               $recommended = $shifted['version'];
@@ -93,7 +107,7 @@ abstract class Repository {
 
   protected function downloadUpdatesAndCommit() {
     $drupal_directory = $this->clone_directory;
-    if (isset($options['directory'])) {
+    if (isset($this->options['directory'])) {
       $drupal_directory = $this->clone_directory . "/" . $this->options['directory'];
     }
     // Step 4: download updated modules with drush
@@ -198,6 +212,7 @@ abstract class Repository {
   public function handle($options = array()) {
     $this->options = $options;
     $this->clone();
+    $this->readOptions();
     $this->getModules();
     $this->getUpdates();
     $this->downloadUpdatesAndCommit();
