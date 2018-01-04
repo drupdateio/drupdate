@@ -8,11 +8,16 @@ final class GithubRepository extends Repository {
   protected $user = '';
   protected $password = '';
 
-  public function __construct($full_name, $branch, $user, $password, $clone_directory = '') {
+  public function __construct($full_name, $branch = NULL, $user, $password, $clone_directory = '') {
     $this->full_name = $full_name;
     $this->user = $user;
     $this->password = $password;
-    $this->branch = $branch;
+    if ($branch == NULL) {
+      $this->branch = $this->getDefaultBranch();
+    }
+    else {
+      $this->branch = $branch;
+    }
     $this->url = 'https://' . $user . ':' . $password . '@github.com/' . $full_name;
     if (empty($clone_directory)) {
       $this->clone_directory = sys_get_temp_dir() . '/' . uniqid();
@@ -56,5 +61,34 @@ final class GithubRepository extends Repository {
 
     // close cURL resource, and free up system resources
     curl_close($ch);
+  }
+
+  protected function getDefaultBranch() {
+    $headers = array(
+      'Authorization: token ' . $this->password,
+      'Accept: application/vnd.github.machine-man-preview+json'
+    );
+
+    $ch = curl_init();
+
+    // set URL and other appropriate options
+    curl_setopt($ch, CURLOPT_URL, "https://api.github.com/repos/" . $this->full_name);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+    curl_setopt($ch, CURLOPT_USERAGENT, 'Drupdate');
+
+    // grab URL and pass it to the browser
+    $response = curl_exec($ch);
+
+    // close cURL resource, and free up system resources
+    curl_close($ch);
+
+    $json = json_decode($response);
+    if ($json->default_branch) {
+      return $json->default_branch;
+    }
+    else {
+      return 'master';
+    }
   }
 }
