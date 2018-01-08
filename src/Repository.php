@@ -44,7 +44,7 @@ abstract class Repository {
   protected function readOptions() {
     if (empty($this->options) && is_file($this->clone_directory . '/.drupdate.yml')) {
       $options = Yaml::parseFile($this->clone_directory . '/.drupdate.yml');
-      if (!empty($values)) {
+      if (!empty($options)) {
         $this->options = $options;
       }
     }
