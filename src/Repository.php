@@ -1,8 +1,8 @@
 <?php
 
-use Symfony\Component\Yaml\Yaml;
-
 namespace Drupdate;
+
+use Symfony\Component\Yaml\Yaml;
 
 abstract class Repository {
 
