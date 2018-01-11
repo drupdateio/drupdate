@@ -149,7 +149,7 @@ abstract class Repository {
     // Step 4: download updated modules with drush
     $to_update = $this->updates;
     if (!empty($to_update)) {
-      foreach ($to_updates as $module) {
+      foreach ($to_update as $module) {
         $this->downloadModuleAndCommit($module);
       }
     }
