@@ -33,6 +33,7 @@ final class GithubRepository extends Repository {
     $pr_data->head = 'drupdate-' . $module . '-' .$this->getDateString();
     $pr_data->base = $this->branch;
     $pr_data->body = "Updated ";
+    $pos = strpos($module, '-');
     $module_name = substr($module, 0, $pos);
     $module_version = substr($module, $pos + 1);
     $pr_data->body .= " * [" . $module_name . "](https://www.drupal.org/project/" . $module_name . "/releases/" . $module_version . ")\n";
