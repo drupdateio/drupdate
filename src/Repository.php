@@ -105,70 +105,69 @@ abstract class Repository {
     return $this->updates;
   }
 
-  protected function downloadUpdatesAndCommit() {
+  protected function downloadModuleAndCommit($module) {
+    $core_directory = '';
+    // Create a new temporary directory
+    $destination = sys_get_temp_dir() . '/' . uniqid();
+    mkdir($destination);
+
+    // Set the source directory
     $drupal_directory = $this->clone_directory;
     if (isset($this->options['directory'])) {
       $drupal_directory = $this->clone_directory . "/" . $this->options['directory'];
     }
+
+    // Copy source into destination
+    $cmd = 'cp -R ' . $drupal_directory . ' ' . $destination;
+    exec($cmd, $output, $return);
+
+    $full_module = $module . '-' . $this->recommended_versions[$module];
+    if ($module == 'drupal') {
+      $core_directory = sys_get_temp_dir() . '/' . uniqid();
+      $cmd = 'drush dl ' . $full_module . ' -y --destination=' . $core_directory . ' --drupal-project-rename';
+      exec($cmd, $output, $return);
+      if ($return == 0) {
+        $cmd = 'cp -R ' . $core_directory . '/drupal/* ' . $destination;
+        exec($cmd, $output, $return);
+      }
+    }
+    else {
+      // Download module
+      $cmd = 'cd ' . $destination . '; drush -y dl ' . $full_module;
+      exec($cmd, $output, $return);
+    }
+
+    $this->commit($full_module, $destination);
+    $this->pullRequest($full_module);
+    $this->rrmdir($destination);
+    if (is_dir($core_directory)) {
+      $this->rrmdir($core_directory);
+    }
+  }
+
+  protected function downloadUpdatesAndCommit() {
     // Step 4: download updated modules with drush
     $to_update = $this->updates;
     if (!empty($to_update)) {
-      $core_update = FALSE;
-      // TODO: handle patches
-      // Handle drupal core specifically
-      if (in_array('drupal', $to_update)) {
-        $dkey = array_search('drupal', $to_update);
-        if ($dkey !== FALSE) {
-          unset($to_update[$dkey]);
-          // Update drupal core
-          // Download in another folder
-          $this->core_directory = sys_get_temp_dir() . '/' . uniqid();
-          $cmd = 'drush dl drupal-' . $this->recommended_versions['drupal'] . ' -y --destination=' . $this->core_directory . ' --drupal-project-rename';
-          exec($cmd, $output, $return);
-          if ($return == 0) {
-            $cmd = 'cp -R ' . $this->core_directory . '/drupal/* ' . $drupal_directory;
-            exec($cmd, $output, $return);
-            $core_update = TRUE;
-          }
-        }
-      }
-      if (!empty($to_update)) {
-        foreach ($to_update as &$name) {
-          $name = $name . '-' . $this->recommended_versions[$name];
-        }
-        $modules = implode(' ', $to_update);
-        $cmd = 'cd ' . $drupal_directory . '; drush -y dl ' . $modules;
-        exec($cmd, $output, $return);
-        if ($return == 0) {
-          if ($core_update) {
-            $modules .= ' drupal-' . $this->recommended_versions['drupal'];
-          }
-          $this->commit($modules);
-          $this->pullRequest($modules);
-        }
-      }
-      else {
-        // We are just updating drupal core
-        $modules = 'drupal-' . $this->recommended_versions['drupal'];
-        $this->commit($modules);
-        $this->pullRequest($modules);
+      foreach ($to_updates as $module) {
+        $this->downloadModuleAndCommit($module);
       }
     }
   }
 
-  protected function commit($modules) {
+  protected function commit($module, $directory) {
     // Step 5: commit the changes in an update branch
     $date = $this->getDateString();
-    $cmd = 'cd '. $this->clone_directory . '; git checkout -b drupdate-' . $date . '; git add --all .; git commit -am "Updated ' . $modules.'"';
+    $cmd = 'cd '. $directory . '; git checkout -b drupdate-' . $module . '-' . $date .'; git add --all .; git commit -am "Updated ' . $module.'"';
     exec($cmd, $output, $return);
     if ($return == 0) {
       // push the updated modules to the branch
-      $cmd = 'cd ' . $this->clone_directory . '; git push origin drupdate-' . $date;
+      $cmd = 'cd ' . $directory . '; git push origin drupdate-' . $module . '-' . $date;
       exec($cmd, $output, $return);
     }
   }
 
-  abstract protected function pullRequest($modules);
+  abstract protected function pullRequest($module);
 
   public function cleanUp() {
     if (is_dir($this->clone_directory)) {
