@@ -109,7 +109,6 @@ abstract class Repository {
     $core_directory = '';
     // Create a new temporary directory
     $destination = sys_get_temp_dir() . '/' . uniqid();
-    mkdir($destination);
 
     // Set the source directory
     $drupal_directory = $this->clone_directory;
