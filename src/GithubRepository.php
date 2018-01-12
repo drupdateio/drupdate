@@ -35,7 +35,7 @@ final class GithubRepository extends Repository {
     $pos = strpos($module, '-');
     $module_name = substr($module, 0, $pos);
     $module_version = substr($module, $pos + 1);
-    $pr_data->title = 'Update ' . $module . ' to ' . $module_version . ' ('. $this->getDateString() . ')';
+    $pr_data->title = 'Update ' . $module_name . ' to ' . $module_version . ' ('. $this->getDateString() . ')';
     $pr_data->body .= "[" . $module_name . "](https://www.drupal.org/project/" . $module_name . "/releases/" . $module_version . ")\n";
 
     $headers = array(
