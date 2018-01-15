@@ -29,7 +29,7 @@ final class GithubRepository extends Repository {
 
   protected function pullRequest($module) {
     $pr_data = new \stdClass();
-    $pr_data->head = 'drupdate-' . $module . '-' .$this->getDateString();
+    $pr_data->head = 'drupdate-' . $module;
     $pr_data->base = $this->branch;
     $pr_data->body = "Updated ";
     $pos = strpos($module, '-');
