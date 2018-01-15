@@ -106,41 +106,43 @@ abstract class Repository {
   }
 
   protected function downloadModuleAndCommit($module) {
-    $core_directory = '';
-    // Create a new temporary directory
-    $destination = sys_get_temp_dir() . '/' . uniqid();
-
-    // Set the source directory
-    $drupal_directory = $this->clone_directory;
-    if (isset($this->options['directory'])) {
-      $drupal_directory = $this->clone_directory . "/" . $this->options['directory'];
-    }
-
-    // Copy source into destination
-    $cmd = 'cp -R ' . $drupal_directory . ' ' . $destination;
-    exec($cmd, $output, $return);
-
     $full_module = $module . '-' . $this->recommended_versions[$module];
-    if ($module == 'drupal') {
-      $core_directory = sys_get_temp_dir() . '/' . uniqid();
-      $cmd = 'drush dl ' . $full_module . ' -y --destination=' . $core_directory . ' --drupal-project-rename';
+    if ($this->shouldUpdate($full_module)) {
+      $core_directory = '';
+      // Create a new temporary directory
+      $destination = sys_get_temp_dir() . '/' . uniqid();
+
+      // Set the source directory
+      $drupal_directory = $this->clone_directory;
+      if (isset($this->options['directory'])) {
+        $drupal_directory = $this->clone_directory . "/" . $this->options['directory'];
+      }
+
+      // Copy source into destination
+      $cmd = 'cp -R ' . $drupal_directory . ' ' . $destination;
       exec($cmd, $output, $return);
-      if ($return == 0) {
-        $cmd = 'cp -R ' . $core_directory . '/drupal/* ' . $destination;
+
+      if ($module == 'drupal') {
+        $core_directory = sys_get_temp_dir() . '/' . uniqid();
+        $cmd = 'drush dl ' . $full_module . ' -y --destination=' . $core_directory . ' --drupal-project-rename';
+        exec($cmd, $output, $return);
+        if ($return == 0) {
+          $cmd = 'cp -R ' . $core_directory . '/drupal/* ' . $destination;
+          exec($cmd, $output, $return);
+        }
+      }
+      else {
+        // Download module
+        $cmd = 'cd ' . $destination . '; drush -y dl ' . $full_module;
         exec($cmd, $output, $return);
       }
-    }
-    else {
-      // Download module
-      $cmd = 'cd ' . $destination . '; drush -y dl ' . $full_module;
-      exec($cmd, $output, $return);
-    }
 
-    $this->commit($full_module, $destination);
-    $this->pullRequest($full_module);
-    $this->rrmdir($destination);
-    if (is_dir($core_directory)) {
-      $this->rrmdir($core_directory);
+      $this->commit($full_module, $destination);
+      $this->pullRequest($full_module);
+      $this->rrmdir($destination);
+      if (is_dir($core_directory)) {
+        $this->rrmdir($core_directory);
+      }
     }
   }
 
@@ -156,17 +158,18 @@ abstract class Repository {
 
   protected function commit($module, $directory) {
     // Step 5: commit the changes in an update branch
-    $date = $this->getDateString();
-    $cmd = 'cd '. $directory . '; git checkout -b drupdate-' . $module . '-' . $date .'; git add --all .; git commit -am "Updated ' . $module.'"';
+    $cmd = 'cd '. $directory . '; git checkout -b drupdate-' . $module . '; git add --all .; git commit -am "Updated ' . $module.'"';
     exec($cmd, $output, $return);
     if ($return == 0) {
       // push the updated modules to the branch
-      $cmd = 'cd ' . $directory . '; git push origin drupdate-' . $module . '-' . $date;
+      $cmd = 'cd ' . $directory . '; git push origin drupdate-' . $module;
       exec($cmd, $output, $return);
     }
   }
 
   abstract protected function pullRequest($module);
+
+  abstract protected function shouldUpdate($module);
 
   public function cleanUp() {
     if (is_dir($this->clone_directory)) {

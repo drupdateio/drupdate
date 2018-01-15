@@ -60,6 +60,40 @@ final class GithubRepository extends Repository {
     curl_close($ch);
   }
 
+  protected function shouldUpdate($module) {
+    return !$this->branchExists('drupdate-' . $module);
+  }
+
+  protected function branchExists($branch) {
+    $headers = array(
+      'Authorization: token ' . $this->password,
+      'Accept: application/vnd.github.machine-man-preview+json'
+    );
+
+    $ch = curl_init();
+
+    // set URL and other appropriate options
+    curl_setopt($ch, CURLOPT_URL, "https://api.github.com/repos/" . $this->full_name . '/branches/' . $branch);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+    curl_setopt($ch, CURLOPT_USERAGENT, 'Drupdate');
+
+    // grab URL and pass it to the browser
+    $response = curl_exec($ch);
+
+    $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+    // close cURL resource, and free up system resources
+    curl_close($ch);
+
+    if ($http_status == 200) {
+      return true;
+    }
+    else {
+      return false;
+    }
+  }
+
   protected function getDefaultBranch() {
     $headers = array(
       'Authorization: token ' . $this->password,
