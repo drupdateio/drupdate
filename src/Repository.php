@@ -82,13 +82,15 @@ abstract class Repository {
         $xml = file_get_contents($update_fetch_url);
         if ($xml) {
           $available = update_parse_xml($xml);
-          update_calculate_project_update_status(NULL, $project, $available);
-          $recommended = isset($project['recommended']) ? $project['recommended'] : '';
-          if (isset($this->options['security_only']) && !empty($this->options['security_only'])) {
-            if (count($project['security updates'])) {
+	  update_calculate_project_update_status(NULL, $project, $available);
+	  if (isset($this->options['security_only']) && !empty($this->options['security_only'])) {
+            if (isset($project['security updates']) && count($project['security updates'])) {
               $shifted = array_shift($project['security updates']);
               $recommended = $shifted['version'];
             }
+          }
+          else {
+            $recommended = isset($project['recommended']) ? $project['recommended'] : '';
           }
           if (isset($project['existing_version']) &&
             !empty($recommended) &&
